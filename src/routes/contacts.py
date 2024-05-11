@@ -1,6 +1,7 @@
 from typing import List
 from datetime import date
 from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi_limiter.depends import RateLimiter
 from sqlalchemy.orm import Session
 
 from src.database.db import get_db
@@ -12,13 +13,15 @@ from src.services.auth import auth_service
 router = APIRouter(prefix='/contacts', tags=["contacts"])
 
 
-@router.get("/", response_model=List[ContactResponse])
+@router.get("/", response_model=List[ContactResponse], description='No more than 5 requests per minute',
+            dependencies=[Depends(RateLimiter(times=5, seconds=60))])
 async def read_contacts(skip: int = 0, limit: int = 100, db: Session = Depends(get_db), current_user: User = Depends(auth_service.get_current_user)):
     contacts = await repository_contacts.get_contacts(skip, limit, current_user, db)
     return contacts
 
 
-@router.get("/search/by_name/{contact_name}", response_model=List[ContactResponse])
+router.get("/search/by_name/{contact_name}", response_model=List[ContactResponse], description='No more than 5 requests per minute',
+            dependencies=[Depends(RateLimiter(times=7, seconds=30))])
 async def read_contacts_by_name(contact_name: str, db: Session = Depends(get_db), current_user: User = Depends(auth_service.get_current_user)):
     contacts = await repository_contacts.get_contacts_by_name(contact_name, current_user, db)
     return contacts

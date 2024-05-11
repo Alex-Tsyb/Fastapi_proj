@@ -28,6 +28,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     username = Column(String(50))
     email = Column(String(250), nullable=False, unique=True)
+    confirmed = Column(Boolean, default=False)
     password = Column(String(255), nullable=False)
     created_at = Column('crated_at', DateTime, default=func.now())
     avatar = Column(String(255), nullable=True)
